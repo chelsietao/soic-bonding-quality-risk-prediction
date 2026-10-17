@@ -1,0 +1,58 @@
+[
+  {
+    "figure": 1,
+    "file": "01_parameter_defect_rates.png",
+    "title": "Parameter defect rates",
+    "panels": 7,
+    "slides": "4\u20136"
+  },
+  {
+    "figure": 2,
+    "file": "02_correlation_tool_time.png",
+    "title": "Correlation, tool and time",
+    "panels": 3,
+    "slides": "7\u20139"
+  },
+  {
+    "figure": 3,
+    "file": "03_logistic_validation.png",
+    "title": "Logistic Regression validation",
+    "panels": 2,
+    "slides": "11\u201312"
+  },
+  {
+    "figure": 4,
+    "file": "04_threshold_tradeoffs.png",
+    "title": "Threshold tradeoffs",
+    "panels": 2,
+    "slides": "13\u201314"
+  },
+  {
+    "figure": 5,
+    "file": "05_model_comparison.png",
+    "title": "Validation model comparison",
+    "panels": 2,
+    "slides": "15"
+  },
+  {
+    "figure": 6,
+    "file": "06_test_evaluation.png",
+    "title": "Test evaluation",
+    "panels": 2,
+    "slides": "16\u201317"
+  },
+  {
+    "figure": 7,
+    "file": "07_permutation_importance.png",
+    "title": "Permutation importance",
+    "panels": 1,
+    "slides": "18"
+  },
+  {
+    "figure": 8,
+    "file": "08_partial_dependence.png",
+    "title": "Partial dependence",
+    "panels": 3,
+    "slides": "19\u201321"
+  }
+]
