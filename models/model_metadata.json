@@ -1,0 +1,40 @@
+{
+  "model": "HistGradientBoostingClassifier",
+  "features": [
+    "temperature_mean",
+    "temperature_std",
+    "pressure_mean",
+    "process_time",
+    "alignment_error",
+    "surface_particle_count",
+    "runs_since_maintenance"
+  ],
+  "target": "defect_flag",
+  "target_definition": {
+    "0": "no defect",
+    "1": "defect"
+  },
+  "inspection_policy": {
+    "type": "top_fraction_per_batch",
+    "fraction": 0.2,
+    "tie_break": "original row order"
+  },
+  "data_source": "synthetic data",
+  "feature_units": {
+    "temperature_mean": null,
+    "temperature_std": null,
+    "pressure_mean": null,
+    "process_time": null,
+    "alignment_error": null,
+    "surface_particle_count": null,
+    "runs_since_maintenance": null
+  },
+  "units_status": "not documented; require definition",
+  "versions": {
+    "python": "3.13.15",
+    "scikit_learn": "1.6.1",
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "joblib": "1.6.0"
+  }
+}
