@@ -1,6 +1,6 @@
 # SoIC Bonding Quality Risk Prediction
 
-[繁體中文主管講解版](README.zh-TW.md) · [Presentation](presentations/SoIC_Process_Engineer_Briefing_ZH.pptx) · [Open in Colab](https://colab.research.google.com/github/chelsietao/soic-bonding-quality-risk-prediction/blob/main/notebooks/SoIC_Bonding_01_EDA.ipynb)
+[繁體中文技術說明](README.zh-TW.md) · [Presentation](presentations/SoIC_Process_Engineer_Briefing_ZH.pptx) · [Open in Colab](https://colab.research.google.com/github/chelsietao/soic-bonding-quality-risk-prediction/blob/main/notebooks/SoIC_Bonding_01_EDA.ipynb)
 
 ## 1. Project overview
 
@@ -12,21 +12,21 @@ On a 15,000-record chronological test set, the gradient boosting model selected 
 
 **Scope:** the data are synthetic, the study demonstrates an analytical method rather than production qualification. Physical units, the exact bonding step and defect inspection criteria remain undocumented, so parameter values must not serve as actual SoIC recipe recommendations.
 
-## 2. Relevance to the Process Engineer role
+## 2. Process engineering applications
 
-The role context is the user-supplied posting for **2027預聘_SoIC AP7P2(嘉義) & SoIC AZ(美國) 3DAS Process Engineer**, including process development and sustaining, equipment troubleshooting, collaboration, SPC/DOE knowledge, Python/AI capability and an AZ assignment following Chiayi training.
+The workflow connects process measurements with inspection outcomes, supporting the analysis of process development, daily sustaining, equipment investigation and cross-site technical transfer.
 
-| Role responsibility | Evidence in this project | Further evidence needed |
+| Engineering application | Current project evidence | Further validation needed |
 |---|---|---|
 | Process development and improvement | Nonlinear risk analysis and explicit evaluation of inspection coverage | Approved experiments and real process measurements |
 | Daily sustaining and equipment troubleshooting | Tool/time stratification and a proposed investigation sequence | Equipment logs, chamber history, recipe revisions and maintenance records |
-| Cross-functional communication | Traceable metrics, explanations and an engineering handoff plan | Actual collaboration outcomes and signed ownership records |
+| Cross-functional communication | Traceable metrics, explanations and an engineering handoff plan | Site-specific responsibilities and action records |
 | SPC and DOE | A documented extension plan linking monitoring and hypothesis testing | Implemented control charts and executed experiments |
 | AI and Python | Colab analysis, scikit-learn models, saved artifacts and reproducible input data | Production integration and monitoring |
-| Technician mentoring and fab presence | Proposed standard investigation checklist | On-site practice and technician training evidence |
-| Chiayi training and AZ assignment | Bilingual documentation can support technical handover | Personal availability, willingness and assignment readiness |
+| Standard investigation procedures | Proposed investigation checklist | Site-specific SOPs and execution records |
+| Cross-site method transfer | Bilingual documentation and versioned artifacts | Local equipment, recipe and measurement validation |
 
-The project supports a discussion of transferable analytical skills, while manufacturing experience and relocation commitments require separate evidence.
+The project establishes an analytical workflow, with manufacturing decisions requiring process physics, equipment evidence and qualified measurements.
 
 ## 3. Data contract
 
@@ -190,7 +190,7 @@ The plan requires an explicit response definition, measurement-system checks, in
 
 ```text
 README.md                 English technical overview
-README.zh-TW.md           Traditional Chinese explanation and interview guide
+README.zh-TW.md           Traditional Chinese technical documentation
 notebooks/                Colab notebook
 data/                     Fixed synthetic CSV and SHA-256 checksum
 models/                   Saved tree model and feature/policy metadata
@@ -223,7 +223,6 @@ In this example `records` is a batch DataFrame with validated numerical features
 
 - Numerical results, `results/model_comparison.csv`, `results/final_evaluation.csv`, `results/permutation_importance.csv` and `results/threshold_comparison_logistic.csv`
 - Implementation, `notebooks/SoIC_Bonding_01_EDA.ipynb`
-- Role requirements, the posting text supplied by the project author for discussion, with current vacancy status not independently verified
 - [NIST, control charts](https://www.itl.nist.gov/div898/handbook/pmc/section3/pmc31.htm)
 - [NIST, experimental design selection](https://www.itl.nist.gov/div898/handbook/pri/section3/pri3.htm)
 - [NIST, randomized block designs](https://www.itl.nist.gov/div898/handbook/pri/section3/pri332.htm)
