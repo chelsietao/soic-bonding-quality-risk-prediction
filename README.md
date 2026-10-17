@@ -8,7 +8,11 @@ This project analyzes **100,000 synthetic bonding records**, using process measu
 
 On the 15,000-record test set, the model selects 3,000 records containing **1,927 of 2,657 defects**. The resulting **precision is 64.2%, recall is 72.5% and enrichment over random selection is 3.63 times**, with 730 defects in the remaining 12,000 records.
 
-All eight executed Colab figure groups appear below, covering 22 analytical panels. The PowerPoint includes every panel, with enlarged views and numerical interpretation, while `images/colab/index.json` maps the source figures to the slides.
+The engineering question is: **when inspection capacity covers 20% of a completed processing cohort, how many defect-labeled records can a risk ranking place in that selection?** The 20% fraction is the evaluation budget chosen for this project.
+
+The analysis connects process variation to record-level review. Parameter plots identify ranges associated with higher observed defect rates, equipment and time plots locate concentrations, and the model combines seven measurements into one ranking. The selected records retain wafer, lot, tool and timestamp references for traceability.
+
+All eight Colab figure groups appear below, covering 22 analytical panels. The PowerPoint includes every panel, with enlarged views and numerical interpretation. `images/colab/index.json` maps the source figures to the slides.
 
 ## 2. Data and prediction point
 
@@ -20,12 +24,12 @@ Each row represents a synthetic wafer processing record, with seven numerical pr
 | `timestamp`, `tool_id` | Processing timestamp and tool identifier | Time and equipment stratification |
 | `temperature_mean`, `temperature_std` | Mean temperature and within-record variation | Model inputs |
 | `pressure_mean`, `process_time` | Mean pressure and processing duration | Model inputs |
-| `alignment_error` | Pre-process alignment error | Model input |
-| `surface_particle_count` | Pre-process particle count | Model input |
+| `alignment_error` | Recorded alignment error | Model input |
+| `surface_particle_count` | Recorded surface particle count | Model input |
 | `runs_since_maintenance` | Runs accumulated since maintenance | Model input |
 | `defect_flag` | 0: no defect, 1: defect | Prediction target |
 
-The prediction point is after the recorded processing step and before quality inspection, so the process summaries are available for scoring. Parameter plots retain the numerical scales in the CSV, with physical-unit metadata recorded in `models/model_metadata.json`.
+The prediction point is after the recorded processing step and before quality inspection, so the process summaries are available for scoring. Parameter plots retain the numerical scales recorded in the CSV. The model uses the seven numerical features. Identifiers, timestamps and tool IDs support splitting and stratified analysis.
 
 `pd.to_datetime()` parses timestamps, numeric conversion validates the seven inputs, and `assert` checks the target labels. `isna()`, `duplicated()` and `describe()` produce completeness, duplication and distribution summaries, with zero missing cells and zero fully duplicated rows in the fixed input.
 
@@ -83,6 +87,8 @@ Lots are ordered by their earliest timestamps, then assigned to training, valida
 | Validation | 15,000 | 600 | 11.02% | Compare models and inspection rules |
 | Test | 15,000 | 600 | 17.71% | Evaluate the fixed tree model and 20% policy |
 
+Training covers January 1 through March 4. Validation covers March 5 through March 18 at 11:58:42, and testing starts March 18 at 12:00:00 and ends March 31, all in UTC+08:00. The model therefore learns from earlier records and ranks later records. Training-fitted preprocessing keeps validation and test values out of the learned imputation and scaling statistics.
+
 The Logistic Regression pipeline combines training-fitted median imputation and standardization, followed by `LogisticRegression(max_iter=1000)`. The tree model uses the same seven numerical inputs, with `HistGradientBoostingClassifier(learning_rate=0.05, max_iter=200, max_leaf_nodes=15, min_samples_leaf=50, l2_regularization=1.0, early_stopping=False, random_state=42)`.
 
 Logistic Regression forms a linear combination on the log-odds scale, while gradient boosting partitions feature ranges through successive trees. This provides a method comparison under a shared input set, training split and validation inspection capacity.
@@ -124,7 +130,7 @@ Changing the threshold from 0.50 to 0.10 covers **1,031 additional defects**, ad
 
 ![Model comparison](images/colab/05_model_comparison.png)
 
-The comparison selects the highest-scoring **3,000 of 15,000 validation records** for each model, using `np.argsort(-scores, kind="stable")`. A 20% inspection fraction selects a fixed number of records, whereas a probability threshold selects records whose scores exceed a particular value.
+The comparison selects the highest-scoring **3,000 of 15,000 validation records** for each model, using `np.argsort(-scores, kind="stable")`. A 20% inspection fraction selects a fixed number of records, whereas a probability threshold selects records whose scores exceed a particular value. Here the full validation set is one evaluation cohort, and the full test set is another. For each cohort, the selection count is `ceil(0.20 × N)`, scores are sorted from largest to smallest, and tied scores retain their original row order.
 
 | Model | AP | ROC-AUC | Defects covered | Defects outside selection | Precision | Recall |
 |---|---:|---:|---:|---:|---:|---:|
@@ -186,9 +192,48 @@ The notebook replaces one feature across validation records and averages the res
 | Mean temperature | About 7% near 249–250, 15% near 245 and 19% near 255.7 | U-shaped response with a lower middle region |
 | Process time | About 8% near 57–60, 14% near 48.5 and 16% near 71.5 | U-shaped response with higher ends |
 
-These readings describe the fitted model's response to feature replacement, with group defect-rate curves in Section 3 providing the corresponding observed-data view.
+These readings describe the fitted model's response to feature replacement, with group defect-rate curves in Section 3 providing the corresponding observed-data view. The two views use different calculations: grouped rates count observed labels within a range, while PDP averages model outputs after replacing a feature across records.
 
-## 12. Code flow, metrics and reproduction
+## 12. Inspection selection and traceability
+
+The scoring sequence follows the information available at the prediction point:
+
+1. Collect the seven recorded process measurements after the processing step.
+2. Apply the trained model to obtain a defect-class score for every record in the cohort.
+3. Rank the scores and select `ceil(0.20 × N)` records.
+4. Link selected positions back to `wafer_id`, `lot_id`, `tool_id` and `timestamp`.
+5. Compare the selection with inspection labels to calculate selected defects, false alerts and defects outside the selection.
+
+For the test cohort, this sequence produces 3,000 selected records: 1,927 defect-labeled records and 1,073 records labeled no defect. The remaining 12,000 contain 730 defect labels. These counts describe the complete allocation of the 15,000 test records.
+
+The following example creates a traceable review table from a completed cohort. `risk_score` is the model output used for ranking.
+
+```python
+import numpy as np
+
+review = records[["wafer_id", "lot_id", "tool_id", "timestamp"]].copy()
+review["risk_score"] = model.predict_proba(records[metadata["features"]])[:, 1]
+positions = np.argsort(-review["risk_score"].to_numpy(), kind="stable")
+k = int(np.ceil(len(review) * 0.20))
+inspection_list = review.iloc[positions[:k]].copy()
+inspection_list.insert(0, "risk_rank", np.arange(1, k + 1))
+```
+
+## 13. Process and equipment review
+
+Each result supports a specific review question. Keeping the observed result next to the associated records makes the discussion reproducible.
+
+| Analysis evidence | Review question | Records to compare |
+|---|---|---|
+| TOOL_C observed defect rate is 13.46% | Is the tool difference also visible within comparable time windows? | Tool, timestamp, seven inputs and inspection labels |
+| The pooled defect rate rises late in March | Which parameter distributions change in the same period? | Daily record counts, daily defects and parameter summaries |
+| Alignment error has the largest permutation AP drop | How do high-score records differ in recorded alignment error? | Selected records versus the rest of the same cohort |
+| Temperature and duration show U-shaped patterns | Are both low and high ranges represented in selected records? | Quantile-bin counts, observed rates and model scores |
+| Defects remain outside the top 20% | Which patterns occur among the 730 unselected test defects? | Labels and process inputs for the unselected group |
+
+The tool and time summaries report quality rates with their sample counts. Permutation importance ranks model dependencies, and PDP describes the fitted response shape. Together they supply complementary evidence for process-data review.
+
+## 14. Code flow, metrics and reproduction
 
 | Step | Code | Output |
 |---|---|---|
@@ -217,7 +262,7 @@ k = int(np.ceil(len(scores) * 0.20))
 selected_positions = np.argsort(-scores, kind="stable")[:k]
 ```
 
-Here `records` is a numerical batch DataFrame, and `selected_positions` contains positional row indices. The saved joblib file is executable serialized content, so its source should be trusted before loading.
+Here `records` is a numerical batch DataFrame, and `selected_positions` contains positional row indices.
 
 ```text
 notebooks/       Colab source
